@@ -1,5 +1,6 @@
 package org.raftywate.urlshortenerwithconsistenthashing.service;
 
+import org.raftywate.urlshortenerwithconsistenthashing.cache.CacheEntry;
 import org.raftywate.urlshortenerwithconsistenthashing.repository.UrlRepository;
 import org.raftywate.urlshortenerwithconsistenthashing.model.UrlMapping;
 import org.springframework.web.server.ResponseStatusException;
@@ -22,15 +23,17 @@ public class UrlService {
 
 //    loadFactor controls resizing threshold and 0.75f is the default Java value
 //    accessOrder = true means order by recent access and not the INSERTION Order, thus, enabling LRU behavior
-    private final Map<String, String> cache =
+    private final Map<String, CacheEntry> cache =
         new LinkedHashMap<>(100, 0.75f, true) {
 
 //        removeEldestEntry is called automatically by Java after every insertion
             @Override
-            protected boolean removeEldestEntry(Map.Entry<String, String> eldest) {
+            protected boolean removeEldestEntry(Map.Entry<String, CacheEntry> eldest) {
                 return size() > 3;
             }
         };
+
+    private static final long TTL_MINUTES = 1; //Cache entries older than 1 min will become invalid
 
     public UrlService(UrlRepository repository) {
         this.repository = repository;
@@ -82,10 +85,21 @@ public class UrlService {
 
     public String getOriginalUrl(String shortCode) {
 
+        CacheEntry cached = cache.get(shortCode);
+
         //CACHE HIT
-        if(cache.containsKey(shortCode)) {
-            System.out.println("CACHE HIT!");
-            return cache.get(shortCode);
+        if(cached != null) {
+            //Check TTL
+            //checking if the expiry time of the cache is in the future or after the current time
+            if(cached.getCreatedAt().plusMinutes(TTL_MINUTES).isAfter(LocalDateTime.now())) {
+                System.out.println("Cache Hit");
+                System.out.println("Current cache: " + cache);
+                return cached.getOriginalUrl();
+            }
+
+            //Expired
+            System.out.println("Cache Expired");
+            cache.remove(shortCode);
         }
 
         System.out.println("CACHE MISS!");
@@ -97,12 +111,12 @@ public class UrlService {
                         new ResponseStatusException(HttpStatus.NOT_FOUND, "URL not found"));
 
         //store in cache
-        cache.put(shortCode, originalUrl);
+        cache.put(shortCode, new CacheEntry(originalUrl, LocalDateTime.now()));
         System.out.println("Current cache: " + cache);
         return originalUrl;
     }
 
-    private String generateShortCode() {
-        return UUID.randomUUID().toString().substring(0, 6);
-    }
+//    private String generateShortCode() {
+//        return UUID.randomUUID().toString().substring(0, 6);
+//    }
 }
