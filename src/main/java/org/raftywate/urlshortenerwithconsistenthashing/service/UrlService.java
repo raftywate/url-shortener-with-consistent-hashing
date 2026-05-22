@@ -3,6 +3,8 @@ package org.raftywate.urlshortenerwithconsistenthashing.service;
 import org.raftywate.urlshortenerwithconsistenthashing.analytics.AnalyticsService;
 import org.raftywate.urlshortenerwithconsistenthashing.cache.CacheEntry;
 import org.raftywate.urlshortenerwithconsistenthashing.hashing.ConsistentHashingService;
+import org.raftywate.urlshortenerwithconsistenthashing.model.UrlLookup;
+import org.raftywate.urlshortenerwithconsistenthashing.repository.UrlLookupRepository;
 import org.raftywate.urlshortenerwithconsistenthashing.repository.UrlRepository;
 import org.raftywate.urlshortenerwithconsistenthashing.model.UrlMapping;
 import org.raftywate.urlshortenerwithconsistenthashing.sharding.SchemaRoutingService;
@@ -28,6 +30,7 @@ public class UrlService {
     private final ConsistentHashingService hashingService;
     private final SchemaRoutingService schemaRoutingService;
     private final AnalyticsService analyticsService;
+    private final UrlLookupRepository urlLookupRepository;
 //    thread-safe concurrent access
 //    private final Map<String, String> cache = new ConcurrentHashMap<>();
 
@@ -49,12 +52,14 @@ public class UrlService {
 
     public UrlService(UrlRepository repository, StringRedisTemplate redisTemplate,
                       ConsistentHashingService  hashingService, SchemaRoutingService schemaRoutingService,
-                      AnalyticsService analyticsService) {
+                      AnalyticsService analyticsService, UrlLookupRepository
+                              urlLookupRepository) {
         this.repository = repository;
         this.redisTemplate = redisTemplate;
         this.hashingService = hashingService;
         this.schemaRoutingService = schemaRoutingService;
         this.analyticsService = analyticsService;
+        this.urlLookupRepository = urlLookupRepository;
     }
 
 
@@ -76,6 +81,16 @@ public class UrlService {
 
         if (!originalUrl.startsWith("http")) {
             originalUrl = "https://" + originalUrl;
+        }
+
+        // CHECK GLOBAL LOOKUP TABLE FIRST
+        Optional<UrlLookup> existingLookup = urlLookupRepository
+                        .findByOriginalUrl(originalUrl);
+
+        if (existingLookup.isPresent()) {
+            System.out.println("Existing short code found");
+
+            return existingLookup.get().getShortCode();
         }
 
         //Generate Short Code first
@@ -100,6 +115,17 @@ public class UrlService {
 
         // SAVE DIRECTLY INTO CORRECT SHARD
         repository.save(mapping);
+
+        // SAVE IN GLOBAL LOOKUP TABLE
+        schemaRoutingService.setSchema("public");
+
+        UrlLookup lookup = new UrlLookup();
+
+        lookup.setOriginalUrl(originalUrl);
+
+        lookup.setShortCode(shortCode);
+
+        urlLookupRepository.save(lookup);
 
         return shortCode;
     }
