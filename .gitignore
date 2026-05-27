@@ -8,3 +8,19 @@ Thumbs.db
 
 # Logs
 *.log
+
+# Environment files
+.env
+
+# Build folders
+target/
+dist/
+
+# Dependencies
+node_modules/
+
+# Docker
+docker-data/
+
+# Mac/Linux
+*.swp

@@ -1,34 +1,28 @@
 package org.raftywate.urlshortenerwithconsistenthashing.service;
 
-import org.raftywate.urlshortenerwithconsistenthashing.analytics.AnalyticsService;
-import org.raftywate.urlshortenerwithconsistenthashing.cache.CacheEntry;
 import org.raftywate.urlshortenerwithconsistenthashing.hashing.ConsistentHashingService;
-import org.raftywate.urlshortenerwithconsistenthashing.model.UrlLookup;
 import org.raftywate.urlshortenerwithconsistenthashing.repository.UrlLookupRepository;
-import org.raftywate.urlshortenerwithconsistenthashing.repository.UrlRepository;
-import org.raftywate.urlshortenerwithconsistenthashing.model.UrlMapping;
-import org.raftywate.urlshortenerwithconsistenthashing.sharding.SchemaRoutingService;
-import org.raftywate.urlshortenerwithconsistenthashing.sharding.ShardContext;
+import org.raftywate.urlshortenerwithconsistenthashing.analytics.AnalyticsService;
+import org.raftywate.urlshortenerwithconsistenthashing.model.UrlLookup;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.web.server.ResponseStatusException;
-//import java.util.concurrent.ConcurrentHashMap;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.http.HttpStatus;
 
-import java.time.Duration;
-import java.util.LinkedHashMap;
+import java.sql.Timestamp;
 import java.time.LocalDateTime;
+import java.time.Duration;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.Map;
 
 @Service
 public class UrlService {
 
-    private final UrlRepository repository;
     private static final String BASE62 = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
     private final ConsistentHashingService hashingService;
-    private final SchemaRoutingService schemaRoutingService;
+    private final JdbcTemplate jdbcTemplate;
     private final AnalyticsService analyticsService;
     private final UrlLookupRepository urlLookupRepository;
 //    thread-safe concurrent access
@@ -50,16 +44,18 @@ public class UrlService {
 
     private final StringRedisTemplate redisTemplate;
 
-    public UrlService(UrlRepository repository, StringRedisTemplate redisTemplate,
-                      ConsistentHashingService  hashingService, SchemaRoutingService schemaRoutingService,
-                      AnalyticsService analyticsService, UrlLookupRepository
-                              urlLookupRepository) {
-        this.repository = repository;
+    public UrlService(
+            StringRedisTemplate redisTemplate,
+            ConsistentHashingService hashingService,
+            AnalyticsService analyticsService,
+            UrlLookupRepository urlLookupRepository,
+            JdbcTemplate jdbcTemplate) {
+
         this.redisTemplate = redisTemplate;
         this.hashingService = hashingService;
-        this.schemaRoutingService = schemaRoutingService;
         this.analyticsService = analyticsService;
         this.urlLookupRepository = urlLookupRepository;
+        this.jdbcTemplate = jdbcTemplate;
     }
 
 
@@ -75,60 +71,62 @@ public class UrlService {
         return sb.reverse().toString();
     }
 
-    public String createShortUrl(String originalUrl) {
+        public String createShortUrl(String originalUrl) {
 
-        originalUrl = originalUrl.trim();
+            originalUrl = originalUrl.trim();
 
-        if (!originalUrl.startsWith("http")) {
-            originalUrl = "https://" + originalUrl;
+            if (!originalUrl.startsWith("http")) {
+
+                originalUrl = "https://" + originalUrl;
+            }
+
+            // DEDUP CHECK
+            Optional<UrlLookup> existingLookup = urlLookupRepository.findByOriginalUrl(originalUrl);
+
+            if (existingLookup.isPresent()) {
+                System.out.println("Existing short code found");
+                return existingLookup.get().getShortCode();
+            }
+
+            // GENERATE SHORT CODE
+            String shortCode =
+                    generateShortCode();
+
+            // DETERMINE SHARD
+            String shard =
+                    hashingService.getNode(shortCode);
+
+            System.out.println(
+                    "Routing to shard: " + shard);
+
+            // INSERT INTO SHARD
+            String insertQuery = """
+                INSERT INTO %s.url_mapping
+                (original_url, short_code, created_at)
+                VALUES (?, ?, ?)
+                """.formatted(shard);
+
+            jdbcTemplate.update(
+                    insertQuery,
+                    originalUrl,
+                    shortCode,
+                    Timestamp.valueOf(LocalDateTime.now())
+            );
+
+            // ANALYTICS
+            analyticsService
+                    .incrementShardCount(shard);
+
+            // SAVE GLOBAL LOOKUP
+            UrlLookup lookup =
+                    new UrlLookup();
+
+            lookup.setOriginalUrl(originalUrl);
+            lookup.setShortCode(shortCode);
+            urlLookupRepository.save(lookup);
+
+            return shortCode;
         }
-
-        // CHECK GLOBAL LOOKUP TABLE FIRST
-        Optional<UrlLookup> existingLookup = urlLookupRepository
-                        .findByOriginalUrl(originalUrl);
-
-        if (existingLookup.isPresent()) {
-            System.out.println("Existing short code found");
-
-            return existingLookup.get().getShortCode();
-        }
-
-        //Generate Short Code first
-        String shortCode = generateShortCode();
-
-        //Then, determine the Shard
-        String shard = hashingService.getNode(shortCode);
-        analyticsService.incrementShardCount(shard);
-        System.out.println("Routing to shard: " + shard);
-
-        //Then switch the schema
-        schemaRoutingService.setSchema(shard);
-
-        //Create the entity now
-        UrlMapping mapping = new UrlMapping();
-
-        mapping.setOriginalUrl(originalUrl);
-
-        mapping.setShortCode(shortCode);
-
-        mapping.setCreatedAt(LocalDateTime.now());
-
-        // SAVE DIRECTLY INTO CORRECT SHARD
-        repository.save(mapping);
-
-        // SAVE IN GLOBAL LOOKUP TABLE
-        schemaRoutingService.setSchema("public");
-
-        UrlLookup lookup = new UrlLookup();
-
-        lookup.setOriginalUrl(originalUrl);
-
-        lookup.setShortCode(shortCode);
-
-        urlLookupRepository.save(lookup);
-
-        return shortCode;
-    }
 
     public String getOriginalUrl(String shortCode) {
         //Checking Redis cache
@@ -144,25 +142,47 @@ public class UrlService {
         System.out.println("Redis Cache Miss");
 
         analyticsService.incrementCacheMisses();
+
+        //determine shard
         String shard = hashingService.getNode(shortCode);
 
         System.out.println("Reading from shard: " + shard);
 
-        schemaRoutingService.setSchema(shard);
+        // QUERY SHARD DIRECTLY
+        String query = """
+                SELECT original_url
+                FROM %s.url_mapping
+                WHERE short_code = ?
+                """.formatted(shard);
 
-        //DB Lookup
-        Optional<UrlMapping> mapping = repository.findByShortCode(shortCode);
+        try {
+            String originalUrl =
+                    jdbcTemplate.queryForObject(
+                            query,
+                            String.class,
+                            shortCode
+                    );
 
-        String originalUrl = mapping.map(UrlMapping::getOriginalUrl)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "URL Not FOUND"));
+            //Store in Redis
+            redisTemplate.opsForValue()
+                    .set(
+                            shortCode,
+                            originalUrl,
+                            Duration.ofMinutes(TTL_MINUTES)
+                    );
 
+            System.out.println("Stored in Redis Cache");
 
-        //Store in Redis with TTL
-        redisTemplate.opsForValue().set(shortCode, originalUrl, Duration.ofMinutes(TTL_MINUTES));
+            analyticsService.incrementRedirects();
 
-        System.out.println("Stored in Redis Cache");
-        analyticsService.incrementRedirects();
-        return originalUrl;
+            return originalUrl;
+
+        } catch (EmptyResultDataAccessException e) {
+            throw new ResponseStatusException(
+                    HttpStatus.NOT_FOUND,
+                    "URL NOT FOUND"
+            );
+        }
     }
 
 //    public String getOriginalUrl(String shortCode) {
@@ -192,13 +212,23 @@ public class UrlService {
 //                .orElseThrow(() ->
 //                        new ResponseStatusException(HttpStatus.NOT_FOUND, "URL not found"));
 //
-//        //store in cache
-//        cache.put(shortCode, new CacheEntry(originalUrl, LocalDateTime.now()));
+//        //store in cache,
+//        //cache.put(shortCode, new CacheEntry(originalUrl, LocalDateTime.now()));
 //        System.out.println("Current cache: " + cache);
 //        return originalUrl;
 //    }
 
     private String generateShortCode() {
-        return UUID.randomUUID().toString().substring(0, 6);
+
+        long timestamp =
+                System.currentTimeMillis();
+
+        long random =
+                (long) (Math.random() * 100000);
+
+        long combined =
+                timestamp + random;
+
+        return encodeBase62(combined);
     }
 }

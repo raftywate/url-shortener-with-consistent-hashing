@@ -11,8 +11,9 @@ import org.springframework.http.HttpStatus;
 import jakarta.validation.Valid;
 import java.net.URI;
 
-
 @RestController
+@RequestMapping
+@CrossOrigin(origins = "http://localhost:5173")
 public class UrlController {
 
     private final UrlService service;
@@ -36,7 +37,7 @@ public class UrlController {
         return service.createShortUrl(request.getUrl());
     }
 
-    @GetMapping("/{shortCode}")
+    @GetMapping("/r/{shortCode}")
     public ResponseEntity<Void> redirect(@PathVariable String shortCode) {
 
         String originalUrl = service.getOriginalUrl(shortCode);
