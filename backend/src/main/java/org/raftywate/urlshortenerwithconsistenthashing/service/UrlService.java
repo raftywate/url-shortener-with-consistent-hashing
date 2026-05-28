@@ -73,12 +73,7 @@ public class UrlService {
 
         public String createShortUrl(String originalUrl) {
 
-            originalUrl = originalUrl.trim();
-
-            if (!originalUrl.startsWith("http")) {
-
-                originalUrl = "https://" + originalUrl;
-            }
+            originalUrl = normalizeUrl(originalUrl);
 
             // DEDUP CHECK
             Optional<UrlLookup> existingLookup = urlLookupRepository.findByOriginalUrl(originalUrl);
@@ -218,7 +213,7 @@ public class UrlService {
 //        return originalUrl;
 //    }
 
-    private String generateShortCode() {
+    public String generateShortCode() {
 
         long timestamp =
                 System.currentTimeMillis();
@@ -230,5 +225,23 @@ public class UrlService {
                 timestamp + random;
 
         return encodeBase62(combined);
+    }
+
+    public String normalizeUrl(String originalUrl) {
+        originalUrl = originalUrl.trim();
+        if (!originalUrl.startsWith("http")) {
+            originalUrl = "https://" + originalUrl;
+        }
+
+        if (originalUrl.endsWith("/") && originalUrl.length() > "https://".length()) {
+            originalUrl = originalUrl.substring(0, originalUrl.length() - 1);
+        }
+        return originalUrl;
+    }
+
+    public String determineShard(String shortCode) {
+
+        return hashingService
+                .getNode(shortCode);
     }
 }

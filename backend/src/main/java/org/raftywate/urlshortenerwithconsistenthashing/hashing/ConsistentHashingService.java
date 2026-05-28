@@ -19,7 +19,7 @@ public class ConsistentHashingService {
         addNode("shard_2");
     }
 
-    private int getHash(String key) {
+    public int getHash(String key) {
 
         try {
 
@@ -32,7 +32,7 @@ public class ConsistentHashingService {
                     | ((digest[2] & 0xFF) << 8)
                     | (digest[3] & 0xFF);
 
-            return Math.abs(hash % 10000);
+            return hash & 0x7fffffff;
 
         } catch (NoSuchAlgorithmException e) {
             throw new RuntimeException(e);
@@ -84,5 +84,9 @@ public class ConsistentHashingService {
         int serverIndex = hash % serverCount;
 
         return "Server-" + (char) ('A' + serverIndex);
+    }
+
+    public int getRingSize() {
+        return ring.size();
     }
 }

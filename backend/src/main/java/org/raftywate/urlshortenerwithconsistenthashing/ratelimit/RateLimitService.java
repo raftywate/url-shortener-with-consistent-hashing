@@ -8,7 +8,7 @@ import java.time.Duration;
 @Service
 public class RateLimitService {
 
-    private static final int MAX_REQUESTS = 500;
+    private static final int MAX_REQUESTS = 5;
 
     private final StringRedisTemplate redisTemplate;
 

@@ -27,7 +27,7 @@ public class UrlController {
     @PostMapping("/shorten")
     //@Valid triggers validation on DTO before method executes
     public String shorten(@Valid @RequestBody UrlRequest request, HttpServletRequest httpRequest) {
-        String ipAddress = httpRequest.getRemoteUser();
+        String ipAddress = httpRequest.getRemoteAddr();
 
         boolean allowed = rateLimitService.isAllowed(ipAddress);
         if (!allowed) {
