@@ -202,8 +202,8 @@ The frontend dashboard includes:
 ## Clone Repository
 
 ```bash
-git clone <your-repo-url>
-cd distributed-url-shortener
+git clone https://github.com/raftywate/url-shortener-with-consistent-hashing.git
+cd url-shortener-with-consistent-hashing
 ```
 
 ## Run Application
