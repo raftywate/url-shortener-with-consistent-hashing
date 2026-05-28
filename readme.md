@@ -265,13 +265,19 @@ GET/analytics
 
 ## Dashboard
 
+![img](docs/images/Dashboard.png)
+
 ---
 
 ## Hash Ring Visualization
 
+![i](docs/images/hashring.png)
+
 ---
 
 ## Analytics Cards
+
+![ ](docs/images/analytics.png)
 
 ---
 
