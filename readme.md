@@ -208,11 +208,9 @@ cd url-shortener-with-consistent-hashing
 
 ## Run Application
 
-
 ```bash
 docker compose up --build
 ```
-
 
 ---
 
@@ -294,8 +292,6 @@ The architecture is designed to simulate scalable distributed backend behavior:
 
 ---
 
-
-
 # 🧩 Architecture Decisions
 
 ## Why Logical Sharding Instead of Physical DB Shards?
@@ -312,8 +308,6 @@ This approach was intentionally chosen to:
 The routing layer is designed so physical multi-database sharding can be introduced later with minimal architectural changes.
 
 ---
-
-
 
 # 🔮 Future Improvements
 
@@ -350,6 +344,22 @@ npm run dev
 ```
 
 ---
+
+
+
+## Environment Variables
+
+Copy the example file:
+
+```bash
+cp .env.example .env
+```
+
+Then configure the required values before running the application.
+
+---
+
+
 
 # 👨‍💻 Author
 
