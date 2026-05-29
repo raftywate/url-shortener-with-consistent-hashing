@@ -173,8 +173,12 @@ export default function HashRing({
             <div
                 className="
                     relative
-                    w-[600px]
-                    h-[600px]
+                    w-[320px]
+                    h-[320px]
+                    sm:w-[450px]
+                    sm:h-[450px]
+                    lg:w-[600px]
+                    lg:h-[600px]
                     mx-auto
                     rounded-full
                     border-4
@@ -377,13 +381,18 @@ export default function HashRing({
                                     className="
                                         bg-green-500
                                         text-black
-                                        px-5
-                                        py-3
                                         rounded-2xl
                                         font-bold
                                         shadow-lg
                                         whitespace-nowrap
-                                        min-w-[120px]
+                                        px-2
+                                        py-1
+                                        text-xs
+                                        min-w-[70px]
+                                        sm:px-5
+                                        sm:py-3
+                                        sm:text-base
+                                        sm:min-w-[120px]
                                         text-center
                                     "
                                 >
