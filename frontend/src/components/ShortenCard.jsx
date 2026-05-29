@@ -6,6 +6,8 @@ export default function ShortenCard() {
     const [url, setUrl] = useState("");
     const [shortUrl, setShortUrl] = useState("");
     const [loading, setLoading] = useState(false);
+    const backendUrl = import.meta.env.VITE_API_BASE_URL;
+
 
     async function handleShorten() {
 
@@ -23,7 +25,7 @@ export default function ShortenCard() {
                 await shortenUrl(url);
 
             setShortUrl(
-                `http://localhost:8080/r/${shortCode}`
+                `${backendUrl}/r/${shortCode}`
             );
 
         } catch (error) {

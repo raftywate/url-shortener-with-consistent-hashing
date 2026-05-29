@@ -168,9 +168,9 @@ export default function Dashboard() {
 
                 </div>
                 
-                <div className="mt-10">
+                {/* <div className="mt-10">
                     <UrlTable />
-                </div>
+                </div> */}
 
             </div>
 
