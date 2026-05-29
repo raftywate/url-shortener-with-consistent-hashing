@@ -13,7 +13,6 @@ import java.net.URI;
 
 @RestController
 @RequestMapping
-@CrossOrigin(origins = "http://localhost:5173")
 public class UrlController {
 
     private final UrlService service;
