@@ -15,11 +15,9 @@ export default function AnalyticsCards({
         <div
             className="
                 grid
-                grid-cols-1
-                md:grid-cols-2
-                lg:grid-cols-4
+                grid-cols-2
+                xl:grid-cols-4
                 gap-6
-                mb-10
             "
         >
 
@@ -28,7 +26,8 @@ export default function AnalyticsCards({
                     bg-zinc-900
                     border border-zinc-800
                     rounded-3xl
-                    p-6
+                    p-8
+                    min-h-45
                 "
             >
 
@@ -36,7 +35,7 @@ export default function AnalyticsCards({
                     Total Redirects
                 </p>
 
-                <h2 className="text-5xl font-bold">
+                <h2 className="text-6xl font-bold">
                     {
                         redirectData
                             .totalRedirects || 0
@@ -50,7 +49,8 @@ export default function AnalyticsCards({
                     bg-zinc-900
                     border border-zinc-800
                     rounded-3xl
-                    p-6
+                    p-8
+                    min-h-45
                 "
             >
 
@@ -58,7 +58,7 @@ export default function AnalyticsCards({
                     Cache Hit Rate
                 </p>
 
-                <h2 className="text-5xl font-bold">
+                <h2 className="text-6xl font-bold">
                     {
                         cacheData.hitRate
                             ?.toFixed(1) || 0
@@ -72,7 +72,8 @@ export default function AnalyticsCards({
                     bg-zinc-900
                     border border-zinc-800
                     rounded-3xl
-                    p-6
+                    p-8
+                    min-h-45
                 "
             >
 
@@ -80,7 +81,7 @@ export default function AnalyticsCards({
                     Cache Hits
                 </p>
 
-                <h2 className="text-5xl font-bold">
+                <h2 className="text-6xl font-bold">
                     {
                         cacheData.cacheHits || 0
                     }
@@ -93,7 +94,8 @@ export default function AnalyticsCards({
                     bg-zinc-900
                     border border-zinc-800
                     rounded-3xl
-                    p-6
+                    p-8
+                    min-h-45
                 "
             >
 
@@ -101,7 +103,7 @@ export default function AnalyticsCards({
                     Active Shards
                 </p>
 
-                <h2 className="text-5xl font-bold">
+                <h2 className="text-6xl font-bold">
                     {activeNodes}
                 </h2>
 

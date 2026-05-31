@@ -125,55 +125,90 @@ export default function Dashboard() {
 
         <div className="min-h-screen bg-black text-white overflow-x-hidden">
 
-            <div className="max-w-7xl px-4 md:px-6 py-6 md:py-10">
+            <div
+                className="
+                max-w-screen-2xl
+                mx-auto
+                px-4
+                md:px-6
+                py-6
+                md:py-10
+            "
+            >
 
-                <h1 className="text-3xl md:text-5xl font-bold mb-3">
+                <h1
+                    className="
+                    text-3xl
+                    md:text-5xl
+                    font-bold
+                    mb-3
+                "
+                >
                     Distributed URL Shortener
                 </h1>
 
-                <p className="text-gray-400 text-lg mb-10">
+                <p
+                    className="
+                    text-gray-400
+                    text-base
+                    md:text-lg
+                    mb-10
+                "
+                >
                     Consistent Hashing + Redis + Sharding
                 </p>
 
-                <AnalyticsCards
-                    cacheData={cacheData}
-                    redirectData={redirectData}
-                    shardData={shardData}
-                    nodes={nodes}
-                />
+                {/* Top Section */}
 
-                <div className="mt-10">
-                    <ShortenCard />
+                <div
+                    className="
+        grid
+        grid-cols-1
+        xl:grid-cols-5
+        gap-8
+        mb-10
+    "
+                >
+
+                    <div className="xl:col-span-2">
+                        <ShortenCard />
+                    </div>
+
+                    <div className="xl:col-span-3">
+                        <AnalyticsCards
+                            cacheData={cacheData}
+                            redirectData={redirectData}
+                            shardData={shardData}
+                            nodes={nodes}
+                        />
+                    </div>
+
                 </div>
 
+                {/* Hash Ring */}
 
-                <div className="mt-10">
+                <div className="mb-10">
 
-                    <NodeControls
+                    <HashRing
                         nodes={nodes}
                         setNodes={setNodes}
                     />
 
                 </div>
 
-                <div className="mt-10">
+                {/* Redirect Chart */}
 
-                    <HashRing
-                        nodes={nodes}
-                    />
+                <div className="mb-10">
 
                     <RedirectChart
                         chartData={chartData}
                     />
 
                 </div>
-                
-                {/* <div className="mt-10">
-                    <UrlTable />
-                </div> */}
 
             </div>
 
         </div>
+
     );
 }

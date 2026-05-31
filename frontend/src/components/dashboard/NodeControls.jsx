@@ -77,7 +77,14 @@ export default function NodeControls({
                 Cluster Controls
             </h2>
 
-            <div className="flex gap-4">
+            <div
+                className="
+                flex
+                flex-col
+                sm:flex-row
+                gap-4
+            "
+            >
 
                 <button
                     onClick={addNode}
@@ -89,6 +96,8 @@ export default function NodeControls({
                         rounded-2xl
                         font-semibold
                         text-black
+                        w-full
+                        sm:w-auto
                     "
                 >
                     Add Node
@@ -104,6 +113,8 @@ export default function NodeControls({
                         rounded-2xl
                         font-semibold
                         text-black
+                        w-full
+                        sm:w-auto
                     "
                 >
                     Remove Node

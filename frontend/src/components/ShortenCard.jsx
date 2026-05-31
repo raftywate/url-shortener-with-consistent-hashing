@@ -62,7 +62,12 @@ export default function ShortenCard() {
                     e.preventDefault();
                     handleShorten();
                 }}
-                className="flex gap-4"
+                className="
+                flex
+                flex-col
+                sm:flex-row
+                gap-4
+            "
             >
 
                 <input
@@ -87,14 +92,17 @@ export default function ShortenCard() {
                     type="submit"
                     disabled={loading}
                     className="
-                        bg-white
-                        text-black
-                        font-semibold
-                        px-6
-                        rounded-2xl
-                        hover:scale-105
-                        transition
-                    "
+                    bg-white
+                    text-black
+                    font-semibold
+                    px-6
+                    py-4
+                    rounded-2xl
+                    hover:scale-105
+                    transition
+                    w-full
+                    sm:w-auto
+                "
                 >
 
                     {

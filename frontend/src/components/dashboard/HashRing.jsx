@@ -1,4 +1,8 @@
-import { useMemo } from "react";
+import {
+    useMemo,
+    useState,
+    useEffect
+} from "react";
 
 const colorPalette = [
     "#4ade80",
@@ -136,9 +140,109 @@ function assignNode(
     return sorted[0].name;
 }
 
+function generateNodeName(index) {
+
+    let name = "";
+
+    index++;
+
+    while (index > 0) {
+
+        index--;
+
+        name =
+            String.fromCharCode(
+                65 + (index % 26)
+            ) + name;
+
+        index =
+            Math.floor(index / 26);
+    }
+
+    return `Node-${name}`;
+}
+
+function generateNodes(count) {
+
+    return Array.from(
+        { length: count },
+        (_, index) => ({
+
+            name:
+                generateNodeName(index),
+
+            angle:
+                (360 / count) * index
+        })
+    );
+}
+
 export default function HashRing({
-    nodes
+    nodes,
+    setNodes
 }) {
+    function addNode() {
+
+        setNodes(
+            generateNodes(
+                nodes.length + 1
+            )
+        );
+    }
+
+    function removeNode() {
+
+        if (nodes.length <= 1) {
+            return;
+        }
+
+        setNodes(
+            generateNodes(
+                nodes.length - 1
+            )
+        );
+    }
+    const [isMobile, setIsMobile] =
+        useState(
+            () => window.innerWidth < 768
+        );
+
+    useEffect(() => {
+
+        function handleResize() {
+
+            setIsMobile(
+                window.innerWidth < 768
+            );
+
+        }
+
+        window.addEventListener(
+            "resize",
+            handleResize
+        );
+
+        return () => {
+
+            window.removeEventListener(
+                "resize",
+                handleResize
+            );
+
+        };
+
+    }, []);
+
+    const ringSize =
+        isMobile
+            ? 320
+            : 600;
+
+    const center =
+        ringSize / 2;
+
+    const radius =
+        ringSize * 0.4;
 
     const urls = useMemo(
         () => generateUrls(100),
@@ -173,26 +277,25 @@ export default function HashRing({
             <div
                 className="
                     relative
-                    w-[320px]
-                    h-[320px]
-                    sm:w-[450px]
-                    sm:h-[450px]
-                    lg:w-[600px]
-                    lg:h-[600px]
                     mx-auto
                     rounded-full
                     border-4
                     border-zinc-700
                 "
+                style={{
+                    width: `${ringSize}px`,
+                    height: `${ringSize}px`
+                }}
             >
                 <svg
+                    viewBox={`0 0 ${ringSize} ${ringSize}`}
                     className="
-        absolute
-        inset-0
-        w-full
-        h-full
-        -rotate-90
-    "
+                        absolute
+                        inset-0
+                        w-full
+                        h-full
+                        -rotate-90
+                    "
                 >
 
                     {
@@ -220,38 +323,32 @@ export default function HashRing({
                                     ? 1
                                     : 0;
 
-                            const radius = 240;
-
                             const startX =
-                                300 +
+                                center +
                                 radius *
                                 Math.cos(
-                                    (Math.PI / 180)
-                                    * startAngle
+                                    (Math.PI / 180) * startAngle
                                 );
 
                             const startY =
-                                300 +
+                                center +
                                 radius *
                                 Math.sin(
-                                    (Math.PI / 180)
-                                    * startAngle
+                                    (Math.PI / 180) * startAngle
                                 );
 
                             const endX =
-                                300 +
+                                center +
                                 radius *
                                 Math.cos(
-                                    (Math.PI / 180)
-                                    * endAngle
+                                    (Math.PI / 180) * endAngle
                                 );
 
                             const endY =
-                                300 +
+                                center +
                                 radius *
                                 Math.sin(
-                                    (Math.PI / 180)
-                                    * endAngle
+                                    (Math.PI / 180) * endAngle
                                 );
 
                             return (
@@ -362,6 +459,8 @@ export default function HashRing({
                             <div
                                 key={vnode.vnodeId}
                                 className="
+                                    hidden
+                                    md:block
                                     absolute
                                     -translate-x-1/2
                                     -translate-y-1/2
@@ -388,11 +487,11 @@ export default function HashRing({
                                         px-2
                                         py-1
                                         text-xs
-                                        min-w-[70px]
+                                        min-w-17.5
                                         sm:px-5
                                         sm:py-3
                                         sm:text-base
-                                        sm:min-w-[120px]
+                                        sm:min-w-30
                                         text-center
                                     "
                                 >
@@ -410,12 +509,12 @@ export default function HashRing({
 
             <div
                 className="
-        mt-10
-        flex
-        flex-wrap
-        gap-4
-        justify-center
-    "
+                mt-10
+                flex
+                flex-wrap
+                gap-4
+                justify-center
+                "
             >
 
                 {
@@ -456,6 +555,74 @@ export default function HashRing({
                         </div>
                     ))
                 }
+
+            </div>
+
+            <div
+                className="
+        mt-8
+        pt-6
+        border-t
+        border-zinc-800
+    "
+            >
+
+                <h3
+                    className="
+            text-xl
+            font-bold
+            mb-4
+        "
+                >
+                    Cluster Controls
+                </h3>
+
+                <div
+                    className="
+            flex
+            flex-col
+            sm:flex-row
+            gap-4
+        "
+                >
+
+                    <button
+                        onClick={addNode}
+                        className="
+                bg-green-500
+                hover:scale-105
+                transition
+                px-5
+                py-3
+                rounded-2xl
+                font-semibold
+                text-black
+                w-full
+                sm:w-auto
+            "
+                    >
+                        Add Node
+                    </button>
+
+                    <button
+                        onClick={removeNode}
+                        className="
+                bg-red-500
+                hover:scale-105
+                transition
+                px-5
+                py-3
+                rounded-2xl
+                font-semibold
+                text-black
+                w-full
+                sm:w-auto
+            "
+                    >
+                        Remove Node
+                    </button>
+
+                </div>
 
             </div>
 
