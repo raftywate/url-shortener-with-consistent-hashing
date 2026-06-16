@@ -80,6 +80,8 @@ function AnalyticsCard({
                     font-bold
                     leading-none
                     whitespace-nowrap
+                    overflow-hidden
+                    text-ellipsis
                     text-[clamp(2rem,4vw,4rem)]
                 "
             >
