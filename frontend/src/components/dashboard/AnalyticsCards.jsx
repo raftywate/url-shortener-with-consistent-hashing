@@ -29,10 +29,9 @@ export default function AnalyticsCards({
 
             <AnalyticsCard
                 title="Cache Hit Rate"
-                value={`${
-                    cacheData.hitRate
-                        ?.toFixed(1) || 0
-                }%`}
+                value={`${cacheData.hitRate
+                    ?.toFixed(1) || 0
+                    }%`}
             />
 
             <AnalyticsCard
@@ -80,13 +79,14 @@ function AnalyticsCard({
                 className="
                     font-bold
                     leading-none
-                    break-words
+                    whitespace-nowrap
+                    overflow-hidden
+                    text-ellipsis
                     text-[clamp(2rem,4vw,4rem)]
                 "
             >
                 {value}
             </h2>
-
         </div>
     );
 }
