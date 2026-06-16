@@ -5,8 +5,6 @@ export default function AnalyticsCards({
     nodes
 }) {
 
-    const totalShards =
-        Object.keys(shardData).length;
     const activeNodes =
         nodes.length;
 
@@ -21,93 +19,73 @@ export default function AnalyticsCards({
             "
         >
 
-            <div
+            <AnalyticsCard
+                title="Total Redirects"
+                value={
+                    redirectData
+                        .totalRedirects || 0
+                }
+            />
+
+            <AnalyticsCard
+                title="Cache Hit Rate"
+                value={`${
+                    cacheData.hitRate
+                        ?.toFixed(1) || 0
+                }%`}
+            />
+
+            <AnalyticsCard
+                title="Cache Hits"
+                value={
+                    cacheData.cacheHits || 0
+                }
+            />
+
+            <AnalyticsCard
+                title="Active Shards"
+                value={activeNodes}
+            />
+
+        </div>
+    );
+}
+
+function AnalyticsCard({
+    title,
+    value
+}) {
+
+    return (
+
+        <div
+            className="
+                bg-zinc-900
+                border border-zinc-800
+                rounded-3xl
+                p-8
+                min-h-[180px]
+                flex
+                flex-col
+                justify-between
+                overflow-hidden
+            "
+        >
+
+            <p className="text-gray-400">
+                {title}
+            </p>
+
+            <h2
                 className="
-                    bg-zinc-900
-                    border border-zinc-800
-                    rounded-3xl
-                    p-8
-                    min-h-45
+                    font-bold
+                    leading-none
+                    break-words
+                    text-[clamp(2rem,4vw,4rem)]
                 "
             >
-
-                <p className="text-gray-400 mb-3">
-                    Total Redirects
-                </p>
-
-                <h2 className="text-6xl font-bold">
-                    {
-                        redirectData
-                            .totalRedirects || 0
-                    }
-                </h2>
-
-            </div>
-
-            <div
-                className="
-                    bg-zinc-900
-                    border border-zinc-800
-                    rounded-3xl
-                    p-8
-                    min-h-45
-                "
-            >
-
-                <p className="text-gray-400 mb-3">
-                    Cache Hit Rate
-                </p>
-
-                <h2 className="text-6xl font-bold">
-                    {
-                        cacheData.hitRate
-                            ?.toFixed(1) || 0
-                    }%
-                </h2>
-
-            </div>
-
-            <div
-                className="
-                    bg-zinc-900
-                    border border-zinc-800
-                    rounded-3xl
-                    p-8
-                    min-h-45
-                "
-            >
-
-                <p className="text-gray-400 mb-3">
-                    Cache Hits
-                </p>
-
-                <h2 className="text-6xl font-bold">
-                    {
-                        cacheData.cacheHits || 0
-                    }
-                </h2>
-
-            </div>
-
-            <div
-                className="
-                    bg-zinc-900
-                    border border-zinc-800
-                    rounded-3xl
-                    p-8
-                    min-h-45
-                "
-            >
-
-                <p className="text-gray-400 mb-3">
-                    Active Shards
-                </p>
-
-                <h2 className="text-6xl font-bold">
-                    {activeNodes}
-                </h2>
-
-            </div>
+                {value}
+            </h2>
 
         </div>
     );
