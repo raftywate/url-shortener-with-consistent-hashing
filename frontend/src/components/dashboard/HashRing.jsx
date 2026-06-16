@@ -15,6 +15,28 @@ const colorPalette = [
     "#f87171"
 ];
 
+function polarToCartesian(
+    angle,
+    radius,
+    center
+) {
+
+    const radians =
+        (angle - 90)
+        * (Math.PI / 180);
+
+    return {
+
+        x:
+            center +
+            radius * Math.cos(radians),
+
+        y:
+            center +
+            radius * Math.sin(radians)
+    };
+}
+
 function generateVirtualNodes(
     nodes,
     virtualCount = 3
@@ -92,8 +114,7 @@ function generateUrls(count) {
             id: `URL-${index + 1}`,
 
             angle:
-                (360 / count) * index +
-                Math.random() * 10
+                Math.random() * 360
         })
     );
 }
@@ -294,7 +315,6 @@ export default function HashRing({
                         inset-0
                         w-full
                         h-full
-                        -rotate-90
                     "
                 >
 
@@ -330,37 +350,32 @@ export default function HashRing({
                                     (Math.PI / 180) * startAngle
                                 );
 
-                            const startY =
-                                center +
-                                radius *
-                                Math.sin(
-                                    (Math.PI / 180) * startAngle
+                            const start =
+                                polarToCartesian(
+                                    startAngle,
+                                    radius,
+                                    center
                                 );
 
-                            const endX =
-                                center +
-                                radius *
-                                Math.cos(
-                                    (Math.PI / 180) * endAngle
+                            const end =
+                                polarToCartesian(
+                                    endAngle,
+                                    radius,
+                                    center
                                 );
-
-                            const endY =
-                                center +
-                                radius *
-                                Math.sin(
-                                    (Math.PI / 180) * endAngle
-                                );
+                            
+                            
 
                             return (
 
                                 <path
                                     key={vnode.vnodeId}
                                     d={`
-                        M ${startX} ${startY}
-                        A ${radius} ${radius}
-                        0 ${largeArc} 1
-                        ${endX} ${endY}
-                    `}
+                                        M ${start.x} ${start.y}
+                                        A ${radius} ${radius}
+                                        0 ${largeArc} 1
+                                        ${end.x} ${end.y}
+                                    `}
                                     stroke={
                                         nodeColorMap[
                                         vnode.physicalNode
