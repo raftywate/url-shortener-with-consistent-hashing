@@ -1,7 +1,7 @@
 # Distributed URL Shortener (ShardLink)
 
 🔗 **GitHub Repository:** [raftywate/url-shortener-with-consistent-hashing](https://github.com/raftywate/url-shortener-with-consistent-hashing)  
-🔗 **Live Demo:** [shardlink.raftywate.dev](https://shardlink.raftywate.dev)
+🔗 **Live Demo:** [https://url-shortener-with-consistent-hashi.vercel.app/](https://https://url-shortener-with-consistent-hashi.vercel.app/)
 
 A scalable distributed URL shortener built using **Spring Boot**, **Redis**, **PostgreSQL**, **Consistent Hashing**, **Virtual Nodes**, **Rate Limiting**, and **Docker**.
 
