@@ -316,12 +316,13 @@ The routing layer is designed so physical multi-database sharding can be introdu
 
 To help interviewers and reviewers understand the choices made in this demo, the following features and parameters are implemented:
 
-## 1. Automated Demo Seeding
-To resolve the "cold start" and "empty graph" issue typical of new deployments, a `DemoSeeder` runs automatically on startup (and on an hourly schedule).
+## 1. Automated Demo Seeding & Live Traffic
+To resolve the "cold start" and "empty graph" issue typical of new deployments, a `DemoSeeder` runs automatically on startup, runs on an hourly schedule, and simulates ongoing traffic.
 * **Seeded Entry Tagging**: Seeded URLs are tagged with an `is_demo = true` column in PostgreSQL to isolate them from organic user shortened URLs.
-* **Realistic Metrics Warming**: The seeder inserts **26 distinct, realistic URLs** and simulates redirect hits with random visit distributions (between 2 and 6 visits per code). This populates the dashboards with realistic cache hits, cache misses, and database shard routing statistics.
-* **Idempotency**: Running the seeder multiple times will not duplicate mappings; it will resolve existing codes and safely increment analytics counters.
-* **TTL Alignment**: The scheduled seeder runs hourly, matching the Redis TTL expiration cycle of 1 minute to ensure dashboard metrics remain active.
+* **Realistic Metrics Warming**: The seeder inserts **26 distinct, realistic URLs** and simulates initial redirect hits with random visit distributions (between 2 and 6 visits per code).
+* **Live Traffic Simulation**: A background scheduled task in `DemoSeeder.java` simulates active user redirects every 5 seconds. This causes the total redirects count to grow dynamically, resulting in an organic, climbing step-up curve on the Redirect Activity line chart rather than a static, flat line.
+* **Jittered History on Load**: Upon opening the dashboard, the frontend generates a jittered 15-point historical step-up curve leading up to the current total redirect count to immediately display a realistic activity history.
+* **Idempotency & TTL Alignment**: Running the seeder multiple times will not duplicate mappings. The hourly refresh keeps Redis warmed despite its 1-minute TTL expiration.
 
 ## 2. Load Testing & Shard Performance Benchmarks
 To back up the scalability claim, we ran a load test suite using `autocannon` targeting a single shard configuration vs. a three logical shard configuration under **500 concurrent connections** sustained for **20 seconds**.
@@ -336,11 +337,15 @@ To back up the scalability claim, we ran a load test suite using `autocannon` ta
 > [!NOTE]
 > **Performance Caveat**: Because the logical database shards in this project share a single underlying PostgreSQL instance, there is no physical network or physical disk I/O isolation. Hence, the throughput numbers are bounded by the database connection pool limit and CPU bottlenecks on the shared Postgres container, resulting in similar throughput profiles. In a production cluster with separate database nodes, physical sharding would show linear scaling.
 
-## 3. Interactive Ring Simulation
-* **Manual Control Ring**: The Consistent Hash Ring visualization in the frontend is designed as a manual, interactive playground to showcase consistent hashing, virtual node distribution, and range rebalancing concepts. It operates independently of backend live traffic to prevent visual clutter of 100+ virtual node labels.
+## 3. Interactive Ring Simulation & Dashboard Enhancements
+* **Live Failover Simulation**: Shards under Cluster Controls can be toggled between **Active** and **Offline**. Taking a shard offline immediately hides its virtual nodes, changes its colored arc to a dashed gray line, and causes the predecessor node's segment to stretch clockwise to assume its range. All mapped URL dots on the ring instantly slide and recolor to show range rebalancing in real-time.
+* **Live Hashing Dot Animations**: Newly shortened URLs in the visitor's session are mapped to stable coordinates on the ring using character-sum string hashing. They render as larger, pulsing, colored circles with expanding ripple pings and hover tooltips detailing short path, click metrics, and owner shard mappings.
 * **Virtual Nodes Topology**:
   * **Backend**: Each database shard registers **100 virtual nodes** to maintain a balanced key distribution.
   * **Frontend**: Shows **3 virtual nodes** per physical node purely for visual simplicity and label readability.
+* **Sleek Light/Dark Theming**: A header toggle allows switching between a deep charcoal dark theme and a clean, high-contrast light theme. Charts, SVGs, and card styles adapt colors dynamically.
+* **Circular SVG Health Gauge**: The Cache Hit Rate card features a circular progress ring that changes color dynamically based on cache health (emerald green for hot cache >70%, amber for moderate >40%, rose/red for cold cache).
+* **Copy & QR Generator**: The shortening card features click-to-copy clipboard buttons with feedback states, and togglable QR code drawers for mobile camera scanning.
 
 ---
 
