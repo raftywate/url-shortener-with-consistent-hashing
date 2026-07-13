@@ -36,22 +36,66 @@ export default function Dashboard() {
     const [shardData, setShardData] =
         useState({});
 
+    const [recentUrls, setRecentUrls] = useState([]);
+
+    const [darkMode, setDarkMode] = useState(() => {
+        const stored = sessionStorage.getItem("darkMode");
+        return stored !== "false"; // default to dark theme
+    });
+
+    const toggleDarkMode = () => {
+        setDarkMode(prev => {
+            sessionStorage.setItem("darkMode", !prev);
+            return !prev;
+        });
+    };
+
+    useEffect(() => {
+        const stored = JSON.parse(sessionStorage.getItem("myShortenedUrls") || "[]");
+        setRecentUrls(stored);
+    }, []);
+
+    const handleShortenSuccess = (newUrl) => {
+        setRecentUrls((prev) => {
+            const updated = [newUrl, ...prev.filter(item => item.shortCode !== newUrl.shortCode)].slice(0, 10);
+            sessionStorage.setItem("myShortenedUrls", JSON.stringify(updated));
+            return updated;
+        });
+    };
+
+    const handleUrlClick = (shortCode) => {
+        setRecentUrls((prev) => {
+            const updated = prev.map(item => {
+                if (item.shortCode === shortCode) {
+                    return { ...item, clicks: (item.clicks || 0) + 1 };
+                }
+                return item;
+            });
+            sessionStorage.setItem("myShortenedUrls", JSON.stringify(updated));
+            return updated;
+        });
+    };
+
     const [nodes, setNodes] = useState([
         {
             name: "Node-A",
-            angle: 0
+            angle: 0,
+            failed: false
         },
         {
             name: "Node-B",
-            angle: 90
+            angle: 90,
+            failed: false
         },
         {
             name: "Node-C",
-            angle: 180
+            angle: 180,
+            failed: false
         },
         {
             name: "Node-D",
-            angle: 270
+            angle: 270,
+            failed: false
         }
     ]);
 
@@ -123,7 +167,7 @@ export default function Dashboard() {
 
     return (
 
-        <div className="min-h-screen bg-black text-white overflow-x-hidden">
+        <div className={`min-h-screen transition-colors duration-300 overflow-x-hidden ${darkMode ? "bg-black text-white" : "bg-zinc-50 text-zinc-900"}`}>
 
             <div
                 className="
@@ -136,27 +180,32 @@ export default function Dashboard() {
             "
             >
 
-                <h1
-                    className="
-                    text-3xl
-                    md:text-5xl
-                    font-bold
-                    mb-3
-                "
-                >
-                    Distributed URL Shortener
-                </h1>
-
-                <p
-                    className="
-                    text-gray-400
-                    text-base
-                    md:text-lg
-                    mb-10
-                "
-                >
-                    Consistent Hashing + Redis + Sharding
-                </p>
+                <div className="flex justify-between items-center mb-6">
+                    <div>
+                        <h1 className="text-3xl md:text-5xl font-bold mb-1">
+                            Distributed URL Shortener
+                        </h1>
+                        <p className={`text-base md:text-lg ${darkMode ? "text-gray-400" : "text-gray-600"}`}>
+                            Consistent Hashing + Redis + Sharding
+                        </p>
+                    </div>
+                    <button
+                        onClick={toggleDarkMode}
+                        className={`p-3 rounded-full border transition-colors ${darkMode ? "bg-zinc-900 border-zinc-800 hover:bg-zinc-800 text-yellow-400" : "bg-white border-zinc-200 hover:bg-zinc-100 text-indigo-600 shadow-md"}`}
+                        aria-label="Toggle Theme"
+                        title="Toggle Light/Dark Theme"
+                    >
+                        {darkMode ? (
+                            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m12.728 0l-.707-.707M6.343 6.364l-.707-.707M12 8a4 4 0 100 8 4 4 0 000-8z" />
+                            </svg>
+                        ) : (
+                            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                            </svg>
+                        )}
+                    </button>
+                </div>
 
                 {/* Top Section */}
 
@@ -171,7 +220,7 @@ export default function Dashboard() {
                 >
 
                     <div className="xl:col-span-2">
-                        <ShortenCard />
+                        <ShortenCard onShortenSuccess={handleShortenSuccess} onUrlClick={handleUrlClick} darkMode={darkMode} />
                     </div>
 
                     <div className="xl:col-span-3">
@@ -180,9 +229,15 @@ export default function Dashboard() {
                             redirectData={redirectData}
                             shardData={shardData}
                             nodes={nodes}
+                            darkMode={darkMode}
                         />
                     </div>
 
+                </div>
+
+                {/* Recent URLs Section */}
+                <div className="mb-10">
+                    <UrlTable urls={recentUrls} onUrlClick={handleUrlClick} darkMode={darkMode} />
                 </div>
 
                 {/* Hash Ring */}
@@ -192,6 +247,8 @@ export default function Dashboard() {
                     <HashRing
                         nodes={nodes}
                         setNodes={setNodes}
+                        liveUrls={recentUrls}
+                        darkMode={darkMode}
                     />
 
                 </div>
@@ -202,6 +259,7 @@ export default function Dashboard() {
 
                     <RedirectChart
                         chartData={chartData}
+                        darkMode={darkMode}
                     />
 
                 </div>

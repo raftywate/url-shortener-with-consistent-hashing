@@ -30,4 +30,11 @@ public class UrlLookup {
     )
     private String shortCode;
 
+    @Setter
+    @Column(
+            name = "is_demo",
+            nullable = false
+    )
+    private boolean isDemo = false;
+
 }

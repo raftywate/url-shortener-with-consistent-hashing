@@ -35,7 +35,8 @@ class RateLimitServiceTest {
 
         rateLimitService =
                 new RateLimitService(
-                        redisTemplate
+                        redisTemplate,
+                        5
                 );
     }
 

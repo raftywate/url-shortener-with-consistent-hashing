@@ -9,19 +9,17 @@ import {
 } from "recharts";
 
 export default function RedirectChart({
-    chartData
+    chartData,
+    darkMode
 }) {
 
     return (
 
         <div
-            className="
-                bg-zinc-900
-                border border-zinc-800
-                rounded-3xl
-                p-6
-                mt-10
-            "
+            className={`
+                border rounded-3xl p-6 mt-10 transition-colors duration-300
+                ${darkMode ? "bg-zinc-900 border-zinc-800 text-white" : "bg-white border-zinc-200 text-zinc-900 shadow-md"}
+            `}
         >
 
             <h2
@@ -44,14 +42,20 @@ export default function RedirectChart({
                     <LineChart data={chartData}>
 
                         <CartesianGrid
-                            stroke="#27272a"
+                            stroke={darkMode ? "#27272a" : "#e4e4e7"}
                         />
 
-                        <XAxis dataKey="time" />
+                        <XAxis dataKey="time" stroke={darkMode ? "#71717a" : "#a1a1aa"} />
 
-                        <YAxis />
+                        <YAxis stroke={darkMode ? "#71717a" : "#a1a1aa"} />
 
-                        <Tooltip />
+                        <Tooltip
+                            contentStyle={{
+                                backgroundColor: darkMode ? "#18181b" : "#ffffff",
+                                borderColor: darkMode ? "#27272a" : "#e4e4e7",
+                                color: darkMode ? "#ffffff" : "#09090b"
+                            }}
+                        />
 
                         <Line
                             type="monotone"

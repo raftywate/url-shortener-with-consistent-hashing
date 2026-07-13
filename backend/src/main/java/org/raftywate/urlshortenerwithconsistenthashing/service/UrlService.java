@@ -72,6 +72,10 @@ public class UrlService {
     }
 
         public String createShortUrl(String originalUrl) {
+            return createShortUrl(originalUrl, false);
+        }
+
+        public String createShortUrl(String originalUrl, boolean isDemo) {
 
             originalUrl = normalizeUrl(originalUrl);
 
@@ -97,15 +101,16 @@ public class UrlService {
             // INSERT INTO SHARD
             String insertQuery = """
                 INSERT INTO %s.url_mapping
-                (original_url, short_code, created_at)
-                VALUES (?, ?, ?)
+                (original_url, short_code, created_at, is_demo)
+                VALUES (?, ?, ?, ?)
                 """.formatted(shard);
 
             jdbcTemplate.update(
                     insertQuery,
                     originalUrl,
                     shortCode,
-                    Timestamp.valueOf(LocalDateTime.now())
+                    Timestamp.valueOf(LocalDateTime.now()),
+                    isDemo
             );
 
             // ANALYTICS
@@ -118,6 +123,7 @@ public class UrlService {
 
             lookup.setOriginalUrl(originalUrl);
             lookup.setShortCode(shortCode);
+            lookup.setDemo(isDemo);
             urlLookupRepository.save(lookup);
 
             return shortCode;

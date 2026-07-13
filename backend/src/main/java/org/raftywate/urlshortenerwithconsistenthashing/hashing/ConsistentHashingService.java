@@ -1,5 +1,7 @@
 package org.raftywate.urlshortenerwithconsistenthashing.hashing;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.security.MessageDigest;
@@ -13,10 +15,15 @@ public class ConsistentHashingService {
     private static final int VIRTUAL_NODES = 100;
 
     public ConsistentHashingService() {
+        this(3);
+    }
 
-        addNode("shard_0");
-        addNode("shard_1");
-        addNode("shard_2");
+    @Autowired
+    public ConsistentHashingService(@Value("${app.shards.active-count:3}") int activeShardsCount) {
+        System.out.println("Initializing Consistent Hash Ring with active shard count: " + activeShardsCount);
+        for (int i = 0; i < activeShardsCount; i++) {
+            addNode("shard_" + i);
+        }
     }
 
     public int getHash(String key) {

@@ -1,5 +1,6 @@
 package org.raftywate.urlshortenerwithconsistenthashing.ratelimit;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
@@ -8,12 +9,13 @@ import java.time.Duration;
 @Service
 public class RateLimitService {
 
-    private static final int MAX_REQUESTS = 5;
-
+    private final int maxRequests;
     private final StringRedisTemplate redisTemplate;
 
-    public RateLimitService(StringRedisTemplate redisTemplate) {
+    public RateLimitService(StringRedisTemplate redisTemplate,
+                            @Value("${app.ratelimit.max-requests:5}") int maxRequests) {
         this.redisTemplate = redisTemplate;
+        this.maxRequests = maxRequests;
     }
 
     public boolean isAllowed(String ipAddress) {
@@ -36,7 +38,7 @@ public class RateLimitService {
                 Integer.parseInt(currentCount);
 
         // LIMIT EXCEEDED
-        if (requests >= MAX_REQUESTS) {
+        if (requests >= maxRequests) {
             return false;
         }
 

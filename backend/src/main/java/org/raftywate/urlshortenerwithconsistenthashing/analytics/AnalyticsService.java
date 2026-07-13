@@ -66,7 +66,7 @@ public class AnalyticsService {
     public void incrementShardCount(String shard) {
 
         shardCounts
-                .get(shard)
+                .computeIfAbsent(shard, k -> new AtomicLong(0))
                 .incrementAndGet();
     }
 
