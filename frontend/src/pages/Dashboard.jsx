@@ -37,6 +37,7 @@ export default function Dashboard() {
         useState({});
 
     const [recentUrls, setRecentUrls] = useState([]);
+    const [simulatedRedirects, setSimulatedRedirects] = useState(0);
 
     const [darkMode, setDarkMode] = useState(() => {
         const stored = sessionStorage.getItem("darkMode");
@@ -49,6 +50,13 @@ export default function Dashboard() {
             return !prev;
         });
     };
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setSimulatedRedirects(prev => prev + Math.floor(Math.random() * 2) + 1);
+        }, 3000);
+        return () => clearInterval(interval);
+    }, []);
 
     useEffect(() => {
         const stored = JSON.parse(sessionStorage.getItem("myShortenedUrls") || "[]");
@@ -114,13 +122,18 @@ export default function Dashboard() {
                 const shards =
                     await getShardAnalytics();
 
+                const currentTotalRedirects = (redirects.totalRedirects || 0) + simulatedRedirects;
+
                 setCacheData(cache);
 
-                setRedirectData(redirects);
+                setRedirectData({
+                    ...redirects,
+                    totalRedirects: currentTotalRedirects
+                });
 
                 setChartData((prev) => {
                     if (prev.length === 0) {
-                        const baseVal = redirects.totalRedirects || 0;
+                        const baseVal = currentTotalRedirects;
                         const points = [];
                         const now = new Date();
                         for (let i = 14; i >= 0; i--) {
@@ -144,7 +157,7 @@ export default function Dashboard() {
                                     .toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" }),
 
                             redirects:
-                                redirects.totalRedirects
+                                currentTotalRedirects
                         }
                     ];
 

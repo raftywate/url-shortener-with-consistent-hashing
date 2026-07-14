@@ -150,31 +150,4 @@ public class DemoSeeder {
             e.printStackTrace();
         }
     }
-
-    @Scheduled(fixedDelay = 5000) // Every 5 seconds
-    public void simulateLiveTraffic() {
-        if (enabled) {
-            try {
-                var urlLookups = urlLookupRepository.findAll();
-                List<String> demoCodes = new ArrayList<>();
-                for (var ul : urlLookups) {
-                    if (ul.isDemo()) {
-                        demoCodes.add(ul.getShortCode());
-                    }
-                }
-                
-                if (!demoCodes.isEmpty()) {
-                    Random rand = new Random();
-                    // Simulate 1 to 2 visits
-                    int count = rand.nextInt(2) + 1;
-                    for (int i = 0; i < count; i++) {
-                        String code = demoCodes.get(rand.nextInt(demoCodes.size()));
-                        urlService.getOriginalUrl(code);
-                    }
-                }
-            } catch (Exception e) {
-                // Ignore errors silently
-            }
-        }
-    }
 }
