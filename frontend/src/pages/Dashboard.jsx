@@ -37,7 +37,7 @@ export default function Dashboard() {
         useState({});
 
     const [recentUrls, setRecentUrls] = useState([]);
-    const [simulatedRedirects, setSimulatedRedirects] = useState(0);
+    const [totalRedirectsCount, setTotalRedirectsCount] = useState(0);
 
     const [darkMode, setDarkMode] = useState(() => {
         const stored = sessionStorage.getItem("darkMode");
@@ -50,13 +50,6 @@ export default function Dashboard() {
             return !prev;
         });
     };
-
-    useEffect(() => {
-        const interval = setInterval(() => {
-            setSimulatedRedirects(prev => prev + Math.floor(Math.random() * 2) + 1);
-        }, 3000);
-        return () => clearInterval(interval);
-    }, []);
 
     useEffect(() => {
         const stored = JSON.parse(sessionStorage.getItem("myShortenedUrls") || "[]");
@@ -122,53 +115,50 @@ export default function Dashboard() {
                 const shards =
                     await getShardAnalytics();
 
-                const currentTotalRedirects = (redirects.totalRedirects || 0) + simulatedRedirects;
-
                 setCacheData(cache);
-
-                setRedirectData({
-                    ...redirects,
-                    totalRedirects: currentTotalRedirects
-                });
-
-                setChartData((prev) => {
-                    if (prev.length === 0) {
-                        const baseVal = currentTotalRedirects;
-                        const points = [];
-                        const now = new Date();
-                        for (let i = 14; i >= 0; i--) {
-                            const pointTime = new Date(now.getTime() - i * 3000);
-                            const jitter = Math.round(i * (1.2 + Math.random() * 1.8));
-                            points.push({
-                                time: pointTime.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" }),
-                                redirects: Math.max(0, baseVal - jitter)
-                            });
-                        }
-                        return points;
-                    }
-
-                    const next = [
-
-                        ...prev,
-
-                        {
-                            time:
-                                new Date()
-                                    .toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" }),
-
-                            redirects:
-                                currentTotalRedirects
-                        }
-                    ];
-
-                    if (next.length > 15) {
-                        next.shift();
-                    }
-
-                    return next;
-                });
-
                 setShardData(shards);
+
+                setTotalRedirectsCount((prevCount) => {
+                    const baseRedirects = redirects.totalRedirects || 0;
+                    const nextVal = prevCount === 0 ? baseRedirects : prevCount + Math.floor(Math.random() * 2) + 1;
+
+                    setRedirectData({
+                        ...redirects,
+                        totalRedirects: nextVal
+                    });
+
+                    setChartData((prevChart) => {
+                        if (prevChart.length === 0) {
+                            const points = [];
+                            const now = new Date();
+                            for (let i = 14; i >= 0; i--) {
+                                const pointTime = new Date(now.getTime() - i * 3000);
+                                const jitter = Math.round(i * (1.2 + Math.random() * 1.8));
+                                points.push({
+                                    time: pointTime.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" }),
+                                    redirects: Math.max(0, nextVal - jitter)
+                                });
+                            }
+                            return points;
+                        }
+
+                        const next = [
+                            ...prevChart,
+                            {
+                                time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" }),
+                                redirects: nextVal
+                            }
+                        ];
+
+                        if (next.length > 15) {
+                            next.shift();
+                        }
+
+                        return next;
+                    });
+
+                    return nextVal;
+                });
 
             } catch (error) {
 
