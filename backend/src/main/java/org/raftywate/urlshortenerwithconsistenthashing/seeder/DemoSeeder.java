@@ -76,13 +76,7 @@ public class DemoSeeder {
         }
     }
 
-    @Scheduled(fixedRate = 3600000) // Every 1 hour
-    public void scheduledSeed() {
-        if (enabled) {
-            System.out.println("Running scheduled demo database seeding...");
-            seedDemoData();
-        }
-    }
+
 
     private void ensureDatabaseColumnsExist() {
         try {
